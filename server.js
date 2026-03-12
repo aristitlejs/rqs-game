@@ -1,91 +1,56 @@
-const express = require("express")
-const http = require("http")
-const { Server } = require("socket.io")
+const express = require('express');
+const app = express();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+const path = require('path');
 
-const app = express()
-const server = http.createServer(app)
-const io = new Server(server)
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(express.static("public"))
+let players = {};
 
-app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/public/screen.html")
-})
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
 
-let players = {}
-
-io.on("connection", (socket) => {
-
-    socket.on("join", (data) => {
-
+    // เมื่อผู้เล่นใหม่ Join
+    socket.on('join_game', (data) => {
         players[socket.id] = {
             id: socket.id,
             name: data.name,
-            x: Math.random() * 700,
-            y: Math.random() * 500
+            x: Math.random() * 800,
+            y: Math.random() * 600,
+            color: Math.floor(Math.random() * 16777215).toString(16)
+        };
+        socket.emit('current_players', players);
+        socket.broadcast.emit('new_player', players[socket.id]);
+    });
+
+    // รับค่าจาก Joystick (Vector x, y)
+    socket.on('player_move', (movement) => {
+        if (players[socket.id]) {
+            players[socket.id].vx = movement.x;
+            players[socket.id].vy = movement.y;
         }
+    });
 
-        io.emit("players", players)
-    })
+    // ระบบ Chat
+    socket.on('send_chat', (msg) => {
+        io.emit('new_chat', { id: socket.id, message: msg });
+    });
 
-    socket.on("move", (data) => {
+    socket.on('disconnect', () => {
+        delete players[socket.id];
+        io.emit('player_disconnected', socket.id);
+    });
+});
 
-        const p = players[socket.id]
+// Update Loop (60 FPS) สำหรับย้ายตำแหน่งบน Server (Simple Sync)
+setInterval(() => {
+    Object.values(players).forEach(player => {
+        if (player.vx) player.x += player.vx * 5;
+        if (player.vy) player.y += player.vy * 5;
+    });
+    io.emit('player_updates', players);
+}, 1000 / 60);
 
-        if (!p) return
-
-        p.x += data.dx
-        p.y += data.dy
-
-        // จำกัดขอบ map
-        p.x = Math.max(0, Math.min(800, p.x))
-        p.y = Math.max(0, Math.min(600, p.y))
-
-        io.emit("players", players)
-    })
-
-    socket.on("players", (players) => {
-
-        const scene = game.scene.scenes[0]
-
-        for (let id in players) {
-
-            if (!avatars[id]) {
-
-                const p = players[id]
-
-                let avatar = scene.add.rectangle(p.x, p.y, 40, 50, 0x4CAF50)
-
-                let name = scene.add.text(
-                    p.x,
-                    p.y - 40,
-                    p.name,
-                    { font: "14px Arial", color: "#ffffff" }
-                ).setOrigin(0.5)
-
-                avatars[id] = { avatar, name }
-
-            }
-
-            avatars[id].avatar.x = players[id].x
-            avatars[id].avatar.y = players[id].y
-
-            avatars[id].name.x = players[id].x
-            avatars[id].name.y = players[id].y - 40
-
-        }
-
-    })
-
-    socket.on("disconnect", () => {
-
-        delete players[socket.id]
-
-        io.emit("players", players)
-
-    })
-
-})
-
-const PORT = process.env.PORT || 3000
-server.listen(PORT)
+const PORT = process.env.PORT || 3000;
+http.listen(PORT, () => console.log(`Server running on port ${PORT}`));

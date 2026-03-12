@@ -1,31 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <title>Join Game</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Join Game - Mobile Controller</title>
     <link rel="stylesheet" href="style.css">
 </head>
+<body class="join-container">
 
-<body class="center">
+    <div class="join-card">
+        <h1>JOIN GAME</h1>
+        <p style="color: #aaa; margin-bottom: 20px; font-size: 14px;">กรอกชื่อของคุณเพื่อเริ่มควบคุมตัวละคร</p>
 
-    <h2>Join Game</h2>
+        <input type="text" id="username" placeholder="ใส่ชื่อของคุณที่นี่..." maxlength="12" autofocus>
 
-    <input id="name" placeholder="Your name">
+        <button class="btn-primary" onclick="joinGame()">START PLAYING</button>
 
-    <button onclick="join()">Join</button>
+        <p style="margin-top: 15px; font-size: 12px; color: #666;">
+            Mobile Controller Mode
+        </p>
+    </div>
 
     <script>
+        // ฟังก์ชันสำหรับส่งตัวแปรชื่อผ่าน URL ไปยังหน้า controller.html
+        function joinGame() {
+            const nameInput = document.getElementById('username');
+            const name = nameInput.value.trim();
 
-function join(){
+            if (name !== "") {
+                // เข้ารหัสชื่อเพื่อป้องกันปัญหาตัวอักษรพิเศษใน URL
+                const encodedName = encodeURIComponent(name);
+                // เปลี่ยนหน้าไปยัง controller.html พร้อมพารามิเตอร์ name
+                window.location.href = `controller.html?name=${encodedName}`;
+            } else {
+                alert("กรุณาใส่ชื่อของคุณก่อนเริ่มเกมครับ");
+                nameInput.focus();
+            }
+        }
 
- const name = document.getElementById("name").value
-
- localStorage.setItem("playerName",name)
-
- window.location="/controller.html"
-
-}
-
+        // รองรับการกดปุ่ม Enter บน Keyboard มือถือ
+        document.getElementById('username').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                joinGame();
+            }
+        });
     </script>
-
 </body>
 </html>

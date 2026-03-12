@@ -1,68 +1,84 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Controller</title>
-
-    <link rel="stylesheet" href="style.css">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #1a1a1a;
+            font-family: sans-serif;
+        }
 
+        #zone_joystick {
+            height: 70vh;
+            width: 100%;
+            position: relative;
+        }
+
+        #chat_zone {
+            height: 30vh;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            gap: 5px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
 </head>
-
-<body class="controller">
-
-    <div id="joystick">
-        <div id="stick"></div>
+<body>
+    <div id="zone_joystick"></div>
+    <div id="chat_zone">
+        <input type="text" id="chat_input" placeholder="Say something...">
+        <button onclick="sendChat()">Send</button>
     </div>
 
     <script>
+        const socket = io();
+        // ส่งชื่อ (สมมติว่ารับมาจากหน้า join.html ผ่าน URL params หรือ localStorage)
+        const urlParams = new URLSearchParams(window.location.search);
+        socket.emit('join_game', { name: urlParams.get('name') || 'Player' });
 
-        const socket = io()
+        const manager = nipplejs.create({
+            zone: document.getElementById('zone_joystick'),
+            mode: 'static',
+            position: { left: '50%', top: '50%' },
+            color: 'cyan'
+        });
 
-        const name = localStorage.getItem("playerName")
-        socket.emit("join", { name })
+        manager.on('move', (evt, data) => {
+            if (data.vector) {
+                socket.emit('player_move', { x: data.vector.x, y: -data.vector.y });
+            }
+        });
 
-        const joystick = document.getElementById("joystick")
-        const stick = document.getElementById("stick")
+        manager.on('end', () => {
+            socket.emit('player_move', { x: 0, y: 0 });
+        });
 
-        let centerX, centerY
-
-        joystick.addEventListener("touchstart", start)
-        joystick.addEventListener("touchmove", move)
-        joystick.addEventListener("touchend", end)
-
-        function start(e) {
-
-            const rect = joystick.getBoundingClientRect()
-
-            centerX = rect.left + rect.width / 2
-            centerY = rect.top + rect.height / 2
-
+        function sendChat() {
+            const input = document.getElementById('chat_input');
+            if (input.value) {
+                socket.emit('send_chat', input.value);
+                input.value = '';
+            }
         }
-
-        function move(e) {
-
-            const t = e.touches[0]
-
-            let dx = t.clientX - centerX
-            let dy = t.clientY - centerY
-
-            stick.style.transform = `translate(${dx}px,${dy}px)`
-
-            socket.emit("move", { dx: dx * 0.05, dy: dy * 0.05 })
-
-        }
-
-        function end() {
-
-            stick.style.transform = "translate(0,0)"
-
-        }
-
     </script>
-
 </body>
 </html>

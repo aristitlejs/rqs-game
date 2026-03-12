@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Browser Game - Main Screen</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <div id="game-container"></div>
+
+    <div id="qr-container">
+        <p style="color: #333; font-size: 12px; margin-bottom: 5px; font-weight: bold; text-align: center;">SCAN TO JOIN</p>
+        <div id="qrcode"></div>
+        <p id="room-url" style="color: #666; font-size: 10px; margin-top: 5px; word-break: break-all; max-width: 128px;"></p>
+    </div>
+
+    <div class="game-ui">
+        <div class="player-count">
+            Online Players: <span id="count">0</span>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+        // สร้าง QR Code อัตโนมัติจาก URL ปัจจุบัน
+        // โดยเปลี่ยนจากหน้าหลักไปที่หน้า join.html
+        const currentUrl = window.location.href;
+        const joinUrl = currentUrl.replace('index.html', '') + 'join.html';
+
+        new QRCode(document.getElementById("qrcode"), {
+            text: joinUrl,
+            width: 128,
+            height: 128,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        document.getElementById('room-url').innerText = joinUrl;
+
+        // อัปเดตจำนวนผู้เล่นจาก Socket (ถ้ามี Event ส่งมา)
+        // socket ใน game.js จะเป็นตัวจัดการหลัก แต่เราสามารถเข้าถึงผ่าน logic แยกได้
+    </script>
+</body>
+</html>
