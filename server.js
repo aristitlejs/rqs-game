@@ -12,42 +12,28 @@ io.on('connection', (socket) => {
 
     // เมื่อผู้เล่นใหม่ Join
     console.log('A user connected:', socket.id);
-
     socket.on('join_game', (data) => {
-        // บันทึกข้อมูลผู้เล่น
+        // สร้าง Object ผู้เล่น
         players[socket.id] = {
             id: socket.id,
-            name: data.name || 'Anonymous',
-            x: 400,
-            y: 300,
+            name: data.name || 'Player',
+            x: 500, // จุดเกิด
+            y: 500,
             vx: 0,
-            vy: 0,
-            color: Math.floor(Math.random() * 16777215).toString(16)
+            vy: 0
         };
 
-        console.log(`Player joined: ${players[socket.id].name} (${socket.id})`);
-
-        // ส่งข้อมูลผู้เล่นทั้งหมดกลับไปให้คนเข้าใหม่
+        // 1. ส่งข้อมูลผู้เล่นทั้งหมดที่มีอยู่ตอนนี้ให้ "คนที่เพิ่งเข้าใหม่"
         socket.emit('current_players', players);
 
-        // แจ้งทุกคนว่ามีคนใหม่เข้า
-        io.emit('new_player', players[socket.id]);
+        // 2. บอก "คนอื่นๆ" ในเกมว่ามีคนใหม่เข้า
+        socket.broadcast.emit('new_player', players[socket.id]);
 
-        // อัปเดตจำนวนผู้เล่นออนไลน์
+        // 3. อัปเดตจำนวนตัวเลข
         io.emit('update_count', Object.keys(players).length);
+        console.log("Player joined:", players[socket.id].name);
     });
 
-    socket.on('disconnect', () => {
-        if (players[socket.id]) {
-            console.log('Player left:', players[socket.id].name);
-            delete players[socket.id];
-            io.emit('player_disconnected', socket.id);
-            // อัปเดตจำนวนหลังคนออก
-            io.emit('update_count', Object.keys(players).length);
-        }
-    });
-
-    // รับค่าจาก Joystick (Vector x, y)
     socket.on('player_move', (movement) => {
         if (players[socket.id]) {
             players[socket.id].vx = movement.x;
@@ -55,27 +41,44 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ระบบ Chat
-    socket.on('send_chat', (msg) => {
-        io.emit('new_chat', { id: socket.id, message: msg });
+    socket.on('disconnect', () => {
+        if (players[socket.id]) {
+            delete players[socket.id];
+            io.emit('player_disconnected', socket.id);
+            io.emit('update_count', Object.keys(players).length);
+        }
     });
+
+    // ระบบ Chat
+    //socket.on('send_chat', (msg) => {
+    //    io.emit('new_chat', { id: socket.id, message: msg });
+    //});
 
 });
 
+// Loop สำหรับขยับตำแหน่ง (หัวใจสำคัญของการขยับ)
+setInterval(() => {
+    Object.values(players).forEach(p => {
+        p.x += (p.vx * 7); // ความเร็ว
+        p.y += (p.vy * 7);
+    });
+    io.emit('player_updates', players); // ส่งตำแหน่งใหม่ให้ทุกหน้าจอ
+}, 1000 / 60);
+
 // Update Loop (60 FPS) สำหรับย้ายตำแหน่งบน Server (Simple Sync)
 // ปรับตัวคูณความเร็วใน setInterval
-setInterval(() => {
-    Object.values(players).forEach(player => {
-        // ถ้ามีการกดปุ่ม (vx หรือ vy ไม่เป็น 0) ให้บวกค่าตำแหน่ง
-        if (player.vx) player.x += player.vx * 7; // ปรับเลข 7 เพื่อเพิ่ม/ลดความเร็ว
-        if (player.vy) player.y += player.vy * 7;
+//setInterval(() => {
+//    Object.values(players).forEach(player => {
+//        // ถ้ามีการกดปุ่ม (vx หรือ vy ไม่เป็น 0) ให้บวกค่าตำแหน่ง
+//        if (player.vx) player.x += player.vx * 7; // ปรับเลข 7 เพื่อเพิ่ม/ลดความเร็ว
+//        if (player.vy) player.y += player.vy * 7;
 
-        // กันตัวละครออกนอกขอบแผนที่ (ตัวอย่าง worldSize 3000)
-        player.x = Math.max(0, Math.min(3000, player.x));
-        player.y = Math.max(0, Math.min(3000, player.y));
-    });
-    io.emit('player_updates', players);
-}, 1000 / 60);
+//        // กันตัวละครออกนอกขอบแผนที่ (ตัวอย่าง worldSize 3000)
+//        player.x = Math.max(0, Math.min(3000, player.x));
+//        player.y = Math.max(0, Math.min(3000, player.y));
+//    });
+//    io.emit('player_updates', players);
+//}, 1000 / 60);
 
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => console.log(`Server running on port ${PORT}`));
