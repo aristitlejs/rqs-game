@@ -8,6 +8,10 @@ const io = new Server(server)
 
 app.use(express.static("public"))
 
+app.get("/", (req, res) => {
+    res.sendFile(__dirname + "/public/screen.html")
+})
+
 let players = {}
 
 io.on("connection", (socket) => {
