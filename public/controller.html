@@ -1,74 +1,19 @@
-﻿<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="/socket.io/socket.io.js"></script>
-
-<div class="pad">
-
-    <button id="up">▲</button>
-
-    <div class="row">
-        <button id="left">◀</button>
-        <button id="right">▶</button>
-    </div>
-
-    <button id="down">▼</button>
-
-</div>
+﻿<script src="/socket.io/socket.io.js"></script>
 
 <script>
 
-    const socket = io()
+const socket = io()
 
-    const name = localStorage.getItem("playerName")
-    socket.emit("join", { name })
+const name = localStorage.getItem("playerName")
+socket.emit("join",{name})
 
-    let moveInterval = null
-    let moving = false
+function move(dx,dy){
+ socket.emit("move",{dx,dy})
+}
 
-    function startMove(dx, dy) {
-
-        if (moving) return
-
-        moving = true
-
-        moveInterval = setInterval(() => {
-            socket.emit("move", { dx, dy })
-        }, 80)
-
-    }
-
-    function stopMove() {
-
-        moving = false
-
-        if (moveInterval) {
-            clearInterval(moveInterval)
-            moveInterval = null
-        }
-
-    }
-
-    function bind(id, dx, dy) {
-
-        const el = document.getElementById(id)
-
-        el.addEventListener("touchstart", (e) => {
-            e.preventDefault()
-            startMove(dx, dy)
-        })
-
-        el.addEventListener("touchend", stopMove)
-        el.addEventListener("touchcancel", stopMove)
-
-        el.addEventListener("mousedown", () => startMove(dx, dy))
-        el.addEventListener("mouseup", stopMove)
-        el.addEventListener("mouseleave", stopMove)
-
-    }
-
-    bind("up", 0, -5)
-    bind("down", 0, 5)
-    bind("left", -5, 0)
-    bind("right", 5, 0)
+document.getElementById("up").onclick = ()=>move(0,-10)
+document.getElementById("down").onclick = ()=>move(0,10)
+document.getElementById("left").onclick = ()=>move(-10,0)
+document.getElementById("right").onclick = ()=>move(10,0)
 
 </script>
