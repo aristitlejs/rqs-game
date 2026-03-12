@@ -108,9 +108,11 @@
 
         function sendChat() {
             const input = document.getElementById('chat_input');
-            if (input.value) {
-                socket.emit('send_chat', input.value);
-                input.value = '';
+            const message = input.value.trim();
+
+            if (message !== "") {
+                socket.emit('send_chat', message); // ชื่อ Event ต้องตรงกับใน server.js
+                input.value = ''; // พิมพ์เสร็จแล้วล้างช่องว่าง
             }
         }
     </script>

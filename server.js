@@ -50,9 +50,11 @@ io.on('connection', (socket) => {
     });
 
     // ระบบ Chat
-    //socket.on('send_chat', (msg) => {
-    //    io.emit('new_chat', { id: socket.id, message: msg });
-    //});
+    socket.on('send_chat', (msg) => {
+        // ส่งข้อความไปให้ทุกคน พร้อมกับ ID ของคนส่ง
+        io.emit('new_chat', { id: socket.id, message: msg });
+        console.log(`Chat from ${socket.id}: ${msg}`);
+    });
 
 });
 

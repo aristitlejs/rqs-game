@@ -30,7 +30,7 @@ function create() {
     socket = io();
     const self = this;
 
-    socket.emit('join_game', { name: 'HOST-SCREEN' });
+    socket.emit('join_game', { name: 'Center' });
 
     // ตั้งค่ากล้องและพื้นหลังเบื้องต้น
     this.cameras.main.setBackgroundColor('#2d2d2d');
@@ -83,10 +83,48 @@ function create() {
             delete otherPlayers[id];
         }
     });
+
+    socket.on('new_chat', (data) => {
+        // หาว่าใครเป็นคนส่ง (ตัวเราหรือคนอื่น)
+        let target = (data.id === socket.id) ? player : otherPlayers[data.id];
+
+        if (target) {
+            showChatBubble(this, target, data.message);
+        }
+    });
+}
+
+function showChatBubble(scene, avatar, message) {
+    // ถ้ามีข้อความเก่าอยู่ให้ลบทิ้งก่อน
+    if (avatar.chatText) avatar.chatText.destroy();
+
+    // สร้างตัวหนังสือเหนือหัว
+    avatar.chatText = scene.add.text(avatar.x, avatar.y - 70, message, {
+        fontSize: '18px',
+        fill: '#ffffff',
+        backgroundColor: '#000000bb',
+        padding: { x: 8, y: 4 },
+        align: 'center'
+    }).setOrigin(0.5);
+
+    // ลบข้อความทิ้งหลังจาก 4 วินาที
+    scene.time.delayedCall(4000, () => {
+        if (avatar.chatText) avatar.chatText.destroy();
+    });
 }
 
 function update() {
     // ส่วนนี้ Phaser จะคอยรันตลอดเวลา
+
+    // ให้ Label ชื่อวิ่งตาม
+    if (player && player.label) player.label.setPosition(player.x, player.y - 40);
+    // ให้ Chat Bubble วิ่งตาม (ถ้ามี)
+    if (player && player.chatText) player.chatText.setPosition(player.x, player.y - 70);
+
+    Object.values(otherPlayers).forEach(p => {
+        if (p.label) p.label.setPosition(p.x, p.y - 40);
+        if (p.chatText) p.chatText.setPosition(p.x, p.y - 70);
+    });
 }
 
 // ฟังก์ชันหลักในการวาดตัวละคร
