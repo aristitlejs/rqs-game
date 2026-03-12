@@ -44,10 +44,16 @@ io.on('connection', (socket) => {
 });
 
 // Update Loop (60 FPS) สำหรับย้ายตำแหน่งบน Server (Simple Sync)
+// ปรับตัวคูณความเร็วใน setInterval
 setInterval(() => {
     Object.values(players).forEach(player => {
-        if (player.vx) player.x += player.vx * 5;
-        if (player.vy) player.y += player.vy * 5;
+        // ถ้ามีการกดปุ่ม (vx หรือ vy ไม่เป็น 0) ให้บวกค่าตำแหน่ง
+        if (player.vx) player.x += player.vx * 7; // ปรับเลข 7 เพื่อเพิ่ม/ลดความเร็ว
+        if (player.vy) player.y += player.vy * 7;
+
+        // กันตัวละครออกนอกขอบแผนที่ (ตัวอย่าง worldSize 3000)
+        player.x = Math.max(0, Math.min(3000, player.x));
+        player.y = Math.max(0, Math.min(3000, player.y));
     });
     io.emit('player_updates', players);
 }, 1000 / 60);
