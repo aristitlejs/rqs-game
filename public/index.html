@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multiplayer Browser Game - Main Screen</title>
     <link rel="stylesheet" href="style.css">
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
@@ -45,6 +45,20 @@
 
         // อัปเดตจำนวนผู้เล่นจาก Socket (ถ้ามี Event ส่งมา)
         // socket ใน game.js จะเป็นตัวจัดการหลัก แต่เราสามารถเข้าถึงผ่าน logic แยกได้
+        const socketUI = io(); // สร้าง socket แยกสำหรับ UI หน้าหลัก
+
+        socketUI.on('update_count', (count) => {
+            const countElement = document.getElementById('count');
+            if (countElement) {
+                countElement.innerText = count;
+                console.log("Current online players:", count);
+            }
+        });
+
+        // ตรวจสอบการเชื่อมต่อ
+        socketUI.on('connect', () => {
+            console.log("Main screen connected to server");
+        });
     </script>
 </body>
 </html>

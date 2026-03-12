@@ -9,19 +9,42 @@ app.use(express.static(path.join(__dirname, 'public')));
 let players = {};
 
 io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
 
     // เมื่อผู้เล่นใหม่ Join
+    console.log('A user connected:', socket.id);
+
     socket.on('join_game', (data) => {
+        // บันทึกข้อมูลผู้เล่น
         players[socket.id] = {
             id: socket.id,
-            name: data.name,
-            x: Math.random() * 800,
-            y: Math.random() * 600,
+            name: data.name || 'Anonymous',
+            x: 400,
+            y: 300,
+            vx: 0,
+            vy: 0,
             color: Math.floor(Math.random() * 16777215).toString(16)
         };
+
+        console.log(`Player joined: ${players[socket.id].name} (${socket.id})`);
+
+        // ส่งข้อมูลผู้เล่นทั้งหมดกลับไปให้คนเข้าใหม่
         socket.emit('current_players', players);
-        socket.broadcast.emit('new_player', players[socket.id]);
+
+        // แจ้งทุกคนว่ามีคนใหม่เข้า
+        io.emit('new_player', players[socket.id]);
+
+        // อัปเดตจำนวนผู้เล่นออนไลน์
+        io.emit('update_count', Object.keys(players).length);
+    });
+
+    socket.on('disconnect', () => {
+        if (players[socket.id]) {
+            console.log('Player left:', players[socket.id].name);
+            delete players[socket.id];
+            io.emit('player_disconnected', socket.id);
+            // อัปเดตจำนวนหลังคนออก
+            io.emit('update_count', Object.keys(players).length);
+        }
     });
 
     // รับค่าจาก Joystick (Vector x, y)
@@ -37,10 +60,6 @@ io.on('connection', (socket) => {
         io.emit('new_chat', { id: socket.id, message: msg });
     });
 
-    socket.on('disconnect', () => {
-        delete players[socket.id];
-        io.emit('player_disconnected', socket.id);
-    });
 });
 
 // Update Loop (60 FPS) สำหรับย้ายตำแหน่งบน Server (Simple Sync)
