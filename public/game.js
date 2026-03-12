@@ -1,40 +1,39 @@
-socket.on("players", (players) => {
+const socket = io()
 
-    const scene = game.scene.scenes[0]
+const config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
 
-    for (let id in avatars) {
+    scene: {
+        preload: preload,
+        create: create
+    }
 
-        if (!players[id]) {
+}
 
-            avatars[id].circle.destroy()
-            avatars[id].text.destroy()
+let game = new Phaser.Game(config)
 
-            delete avatars[id]
+let avatars = {}
+
+function preload() {
+
+    this.load.image("grass", "https://labs.phaser.io/assets/tilemaps/tiles/grass.png")
+
+}
+
+function create() {
+
+    const scene = this
+
+    for (let x = 0; x < 800; x += 64) {
+
+        for (let y = 0; y < 600; y += 64) {
+
+            scene.add.image(x, y, "grass").setOrigin(0)
 
         }
 
     }
 
-    for (let id in players) {
-
-        if (!avatars[id]) {
-
-            const p = players[id]
-
-            let circle = scene.add.circle(p.x, p.y, 20, 0x00ff00)
-
-            let text = scene.add.text(p.x - 20, p.y - 40, p.name)
-
-            avatars[id] = { circle, text }
-
-        }
-
-        avatars[id].circle.x = players[id].x
-        avatars[id].circle.y = players[id].y
-
-        avatars[id].text.x = players[id].x - 20
-        avatars[id].text.y = players[id].y - 40
-
-    }
-
-})
+}

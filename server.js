@@ -44,6 +44,39 @@ io.on("connection", (socket) => {
         io.emit("players", players)
     })
 
+    socket.on("players", (players) => {
+
+        const scene = game.scene.scenes[0]
+
+        for (let id in players) {
+
+            if (!avatars[id]) {
+
+                const p = players[id]
+
+                let avatar = scene.add.rectangle(p.x, p.y, 40, 50, 0x4CAF50)
+
+                let name = scene.add.text(
+                    p.x,
+                    p.y - 40,
+                    p.name,
+                    { font: "14px Arial", color: "#ffffff" }
+                ).setOrigin(0.5)
+
+                avatars[id] = { avatar, name }
+
+            }
+
+            avatars[id].avatar.x = players[id].x
+            avatars[id].avatar.y = players[id].y
+
+            avatars[id].name.x = players[id].x
+            avatars[id].name.y = players[id].y - 40
+
+        }
+
+    })
+
     socket.on("disconnect", () => {
 
         delete players[socket.id]

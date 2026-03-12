@@ -1,19 +1,68 @@
-﻿<script src="/socket.io/socket.io.js"></script>
+﻿<!DOCTYPE html>
+<html>
+<head>
 
-<script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-const socket = io()
+    <title>Controller</title>
 
-const name = localStorage.getItem("playerName")
-socket.emit("join",{name})
+    <link rel="stylesheet" href="style.css">
 
-function move(dx,dy){
- socket.emit("move",{dx,dy})
-}
+    <script src="/socket.io/socket.io.js"></script>
 
-document.getElementById("up").onclick = ()=>move(0,-10)
-document.getElementById("down").onclick = ()=>move(0,10)
-document.getElementById("left").onclick = ()=>move(-10,0)
-document.getElementById("right").onclick = ()=>move(10,0)
+</head>
 
-</script>
+<body class="controller">
+
+    <div id="joystick">
+        <div id="stick"></div>
+    </div>
+
+    <script>
+
+        const socket = io()
+
+        const name = localStorage.getItem("playerName")
+        socket.emit("join", { name })
+
+        const joystick = document.getElementById("joystick")
+        const stick = document.getElementById("stick")
+
+        let centerX, centerY
+
+        joystick.addEventListener("touchstart", start)
+        joystick.addEventListener("touchmove", move)
+        joystick.addEventListener("touchend", end)
+
+        function start(e) {
+
+            const rect = joystick.getBoundingClientRect()
+
+            centerX = rect.left + rect.width / 2
+            centerY = rect.top + rect.height / 2
+
+        }
+
+        function move(e) {
+
+            const t = e.touches[0]
+
+            let dx = t.clientX - centerX
+            let dy = t.clientY - centerY
+
+            stick.style.transform = `translate(${dx}px,${dy}px)`
+
+            socket.emit("move", { dx: dx * 0.05, dy: dy * 0.05 })
+
+        }
+
+        function end() {
+
+            stick.style.transform = "translate(0,0)"
+
+        }
+
+    </script>
+
+</body>
+</html>
