@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Controller</title>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+
+    <h2>Enter Name</h2>
+
+    <input id="name">
+    <button onclick="join()">Join</button>
+
+    <br><br>
+
+    <button onclick="move(0,-5)">↑</button>
+    <br>
+    <button onclick="move(-5,0)">←</button>
+    <button onclick="move(5,0)">→</button>
+    <br>
+    <button onclick="move(0,5)">↓</button>
+
+    <script>
+
+const socket = io()
+
+function join(){
+
+    const name = document.getElementById("name").value
+
+    socket.emit("join",{name})
+}
+
+function move(dx,dy){
+
+    socket.emit("move",{dx,dy})
+}
+
+    </script>
+
+</body>
+</html>
