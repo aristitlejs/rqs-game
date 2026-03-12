@@ -1,75 +1,74 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
+﻿<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/socket.io/socket.io.js"></script>
 
-    <title>Controller</title>
+<div class="pad">
 
-    <link rel="stylesheet" href="style.css">
+    <button id="up">▲</button>
 
-    <script src="/socket.io/socket.io.js"></script>
-
-</head>
-
-<body class="mobile">
-
-    <h2 id="player"></h2>
-
-    <div class="pad">
-
-        <button id="up">▲</button>
-
-        <div class="row">
-            <button id="left">◀</button>
-            <button id="right">▶</button>
-        </div>
-
-        <button id="down">▼</button>
-
+    <div class="row">
+        <button id="left">◀</button>
+        <button id="right">▶</button>
     </div>
 
-    <script>
+    <button id="down">▼</button>
 
-        const socket = io()
+</div>
 
-        const name = localStorage.getItem("playerName")
+<script>
 
-        document.getElementById("player").innerText = name
+    const socket = io()
 
-        socket.emit("join", { name })
+    const name = localStorage.getItem("playerName")
+    socket.emit("join", { name })
 
-        let moveInterval = null
+    let moveInterval = null
+    let moving = false
 
-        function startMove(dx, dy) {
+    function startMove(dx, dy) {
 
-            moveInterval = setInterval(() => {
-                socket.emit("move", { dx, dy })
-            }, 80)
+        if (moving) return
 
-        }
+        moving = true
 
-        function stopMove() {
+        moveInterval = setInterval(() => {
+            socket.emit("move", { dx, dy })
+        }, 80)
 
+    }
+
+    function stopMove() {
+
+        moving = false
+
+        if (moveInterval) {
             clearInterval(moveInterval)
-
+            moveInterval = null
         }
 
-        function bind(id, dx, dy) {
+    }
 
-            const el = document.getElementById(id)
+    function bind(id, dx, dy) {
 
-            el.addEventListener("touchstart", () => startMove(dx, dy))
-            el.addEventListener("touchend", stopMove)
+        const el = document.getElementById(id)
 
-        }
+        el.addEventListener("touchstart", (e) => {
+            e.preventDefault()
+            startMove(dx, dy)
+        })
 
-        bind("up", 0, -5)
-        bind("down", 0, 5)
-        bind("left", -5, 0)
-        bind("right", 5, 0)
+        el.addEventListener("touchend", stopMove)
+        el.addEventListener("touchcancel", stopMove)
 
-    </script>
+        el.addEventListener("mousedown", () => startMove(dx, dy))
+        el.addEventListener("mouseup", stopMove)
+        el.addEventListener("mouseleave", stopMove)
 
-</body>
-</html>
+    }
+
+    bind("up", 0, -5)
+    bind("down", 0, 5)
+    bind("left", -5, 0)
+    bind("right", 5, 0)
+
+</script>

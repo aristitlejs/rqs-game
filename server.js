@@ -33,6 +33,10 @@ io.on("connection", (socket) => {
         p.x += data.dx
         p.y += data.dy
 
+        // จำกัดขอบ map
+        p.x = Math.max(0, Math.min(800, p.x))
+        p.y = Math.max(0, Math.min(600, p.y))
+
         io.emit("players", players)
     })
 
