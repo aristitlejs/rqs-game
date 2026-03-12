@@ -2,27 +2,30 @@
 <html>
 <head>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Controller</title>
+
     <link rel="stylesheet" href="style.css">
 
     <script src="/socket.io/socket.io.js"></script>
 
 </head>
 
-<body class="center">
+<body class="mobile">
 
     <h2 id="player"></h2>
 
     <div class="pad">
 
-        <button class="btn" id="up">▲</button>
+        <button id="up">▲</button>
 
-        <div>
-            <button class="btn" id="left">◀</button>
-            <button class="btn" id="right">▶</button>
+        <div class="row">
+            <button id="left">◀</button>
+            <button id="right">▶</button>
         </div>
 
-        <button class="btn" id="down">▼</button>
+        <button id="down">▼</button>
 
     </div>
 
@@ -42,7 +45,7 @@
 
             moveInterval = setInterval(() => {
                 socket.emit("move", { dx, dy })
-            }, 100)
+            }, 80)
 
         }
 
@@ -55,9 +58,6 @@
         function bind(id, dx, dy) {
 
             const el = document.getElementById(id)
-
-            el.addEventListener("mousedown", () => startMove(dx, dy))
-            el.addEventListener("mouseup", stopMove)
 
             el.addEventListener("touchstart", () => startMove(dx, dy))
             el.addEventListener("touchend", stopMove)

@@ -8,41 +8,43 @@ const io = new Server(server)
 
 app.use(express.static("public"))
 
-app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/public/screen.html")
-})
-
 let players = {}
 
 io.on("connection", (socket) => {
 
     socket.on("join", (data) => {
+
         players[socket.id] = {
             id: socket.id,
             name: data.name,
-            x: Math.random() * 600,
-            y: Math.random() * 400
+            x: Math.random() * 700,
+            y: Math.random() * 500
         }
 
         io.emit("players", players)
     })
 
     socket.on("move", (data) => {
-        if (players[socket.id]) {
 
-            players[socket.id].x += data.dx
-            players[socket.id].y += data.dy
+        const p = players[socket.id]
 
-            io.emit("players", players)
-        }
+        if (!p) return
+
+        p.x += data.dx
+        p.y += data.dy
+
+        io.emit("players", players)
     })
 
     socket.on("disconnect", () => {
+
         delete players[socket.id]
+
         io.emit("players", players)
+
     })
 
 })
 
 const PORT = process.env.PORT || 3000
-server.listen(PORT, () => console.log("server running"))
+server.listen(PORT)
