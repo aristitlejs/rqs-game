@@ -1,21 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Game Screen</title>
+    <title>Multiplayer Game</title>
+
+    <link rel="stylesheet" href="style.css">
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+
 </head>
 
 <body>
 
-    <h2>Scan QR to Join</h2>
-    <div id="qrcode"></div>
+    <h1>Multiplayer Map</h1>
 
+    <div id="qrcode" width="30" height="30"></div>
+    <br />
+    <br />
     <script>
 
-const joinURL = location.origin + "/controller.html"
-new QRCode(document.getElementById("qrcode"), joinURL)
+        const url = location.origin + "/join.html"
+        new QRCode(document.getElementById("qrcode"), url)
 
     </script>
 

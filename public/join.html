@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Join Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="center">
+
+    <h2>Join Game</h2>
+
+    <input id="name" placeholder="Your name">
+
+    <button onclick="join()">Join</button>
+
+    <script>
+
+function join(){
+
+ const name = document.getElementById("name").value
+
+ localStorage.setItem("playerName",name)
+
+ window.location="/controller.html"
+
+}
+
+    </script>
+
+</body>
+</html>

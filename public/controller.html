@@ -1,41 +1,73 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
+
     <title>Controller</title>
+    <link rel="stylesheet" href="style.css">
+
     <script src="/socket.io/socket.io.js"></script>
+
 </head>
 
-<body>
+<body class="center">
 
-    <h2>Enter Name</h2>
+    <h2 id="player"></h2>
 
-    <input id="name">
-    <button onclick="join()">Join</button>
+    <div class="pad">
 
-    <br><br>
+        <button class="btn" id="up">▲</button>
 
-    <button onclick="move(0,-5)">↑</button>
-    <br>
-    <button onclick="move(-5,0)">←</button>
-    <button onclick="move(5,0)">→</button>
-    <br>
-    <button onclick="move(0,5)">↓</button>
+        <div>
+            <button class="btn" id="left">◀</button>
+            <button class="btn" id="right">▶</button>
+        </div>
+
+        <button class="btn" id="down">▼</button>
+
+    </div>
 
     <script>
 
-const socket = io()
+        const socket = io()
 
-function join(){
+        const name = localStorage.getItem("playerName")
 
-    const name = document.getElementById("name").value
+        document.getElementById("player").innerText = name
 
-    socket.emit("join",{name})
-}
+        socket.emit("join", { name })
 
-function move(dx,dy){
+        let moveInterval = null
 
-    socket.emit("move",{dx,dy})
-}
+        function startMove(dx, dy) {
+
+            moveInterval = setInterval(() => {
+                socket.emit("move", { dx, dy })
+            }, 100)
+
+        }
+
+        function stopMove() {
+
+            clearInterval(moveInterval)
+
+        }
+
+        function bind(id, dx, dy) {
+
+            const el = document.getElementById(id)
+
+            el.addEventListener("mousedown", () => startMove(dx, dy))
+            el.addEventListener("mouseup", stopMove)
+
+            el.addEventListener("touchstart", () => startMove(dx, dy))
+            el.addEventListener("touchend", stopMove)
+
+        }
+
+        bind("up", 0, -5)
+        bind("down", 0, 5)
+        bind("left", -5, 0)
+        bind("right", 5, 0)
 
     </script>
 
