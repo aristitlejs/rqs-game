@@ -17,9 +17,7 @@ io.on('connection', (socket) => {
         // สร้างรายการสีที่เป็นเอกลักษณ์ หรือสุ่มขึ้นมา
         const randomColors = ['0xff0000', '0x00ff00', '0x0000ff', '0xffff00', '0xff00ff', '0x00ffff'];
         const selectedColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-
-    
-
+         
         players[socket.id] = {
             id: socket.id,
             name: data.name || 'Player',
