@@ -13,14 +13,23 @@ io.on('connection', (socket) => {
     // เมื่อผู้เล่นใหม่ Join
     console.log('A user connected:', socket.id);
     socket.on('join_game', (data) => {
-        // สร้าง Object ผู้เล่น
+
+        // สร้างรายการสีที่เป็นเอกลักษณ์ หรือสุ่มขึ้นมา
+        const randomColors = ['0xff0000', '0x00ff00', '0x0000ff', '0xffff00', '0xff00ff', '0x00ffff'];
+        const selectedColor = randomColors[Math.floor(Math.random() * randomColors.length)];
+
+    
+
         players[socket.id] = {
             id: socket.id,
             name: data.name || 'Player',
-            x: 500, // จุดเกิด
+            //x: Math.random() * 800 + 100,
+            //y: Math.random() * 600 + 100,
+            x: 500,
             y: 500,
             vx: 0,
-            vy: 0
+            vy: 0,
+            color: selectedColor // เก็บสีไว้ในข้อมูลผู้เล่น
         };
 
         // 1. ส่งข้อมูลผู้เล่นทั้งหมดที่มีอยู่ตอนนี้ให้ "คนที่เพิ่งเข้าใหม่"

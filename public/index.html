@@ -10,8 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-    <style>
-        /* ประกันว่า Container มีขนาดแน่นอนเพื่อให้ Phaser วาดติด */
+    <style> 
         #game-container {
             width: 100vw;
             height: 100vh;
@@ -39,7 +38,7 @@
     <script src="game.js"></script>
 
     <script>
-        // --- ส่วนจัดการ QR Code ---
+
         const currentUrl = window.location.href;
         const joinUrl = currentUrl.replace('index.html', '').split('?')[0] + 'join.html';
 
@@ -53,8 +52,6 @@
         });
         document.getElementById('room-url').innerText = joinUrl;
 
-        // --- ส่วนจัดการ UI (ใช้ Socket ตัวเดียวกับใน game.js) ---
-        // รอให้ Phaser/game.js ทำงานก่อน แล้วค่อยดึง socket มาใช้ร่วมกัน
         const checkSocket = setInterval(() => {
             if (typeof socket !== 'undefined') {
                 socket.on('update_count', (count) => {

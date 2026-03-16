@@ -22,15 +22,64 @@ let socket;
 let player;
 let otherPlayers = {};
 
+// โหลดไฟล์ที่จำเป็นที่นี่ (ถ้ามี)
 function preload() {
-    // โหลดไฟล์ที่จำเป็นที่นี่ (ถ้ามี)
+    // โหลด Sprite Sheet (กว้าง 32px สูง 48px ต่อเฟรม)
+    this.load.spritesheet('dude', 'https://labs.phaser.io/assets/sprites/dude.png', {
+        frameWidth: 32,
+        frameHeight: 48
+    });
 }
 
 function create() {
     socket = io();
     const self = this;
 
+    // สร้าง Animation สำหรับท่าเดิน
+    this.anims.create({
+        key: 'walk',
+        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'idle',
+        frames: [{ key: 'dude', frame: 4 }],
+        frameRate: 20
+    });
+
     socket.emit('join_game', { name: 'Center' });
+
+    socket.on('current_players', (players) => {
+        Object.keys(players).forEach((id) => {
+            addPlayerAvatar(self, players[id], (id === socket.id));
+        });
+    });
+
+    socket.on('new_player', (playerInfo) => {
+        addPlayerAvatar(self, playerInfo, false);
+    });
+
+
+    socket.on('player_updates', (players) => {
+        Object.keys(players).forEach((id) => {
+            let avatar = (id === socket.id) ? player : otherPlayers[id];
+            if (avatar) {
+                avatar.setPosition(players[id].x, players[id].y);
+                avatar.label.setPosition(players[id].x, players[id].y - 40);
+
+                // 2. ควบคุม Animation ตามการขยับ
+                if (players[id].vx !== 0 || players[id].vy !== 0) {
+                    avatar.play('walk', true);
+                    // กลับด้านภาพถ้าเดินไปทางซ้าย
+                    avatar.flipX = (players[id].vx < 0);
+                } else {
+                    avatar.play('idle');
+                }
+            }
+        });
+    });
 
     // ตั้งค่ากล้องและพื้นหลังเบื้องต้น
     this.cameras.main.setBackgroundColor('#2d2d2d');
@@ -129,13 +178,20 @@ function update() {
 
 // ฟังก์ชันหลักในการวาดตัวละคร
 function addPlayerAvatar(scene, info, isLocal) {
-    const color = isLocal ? 0x00ff00 : 0xff0000;
+    //const color = isLocal ? 0x00ff00 : 0xff0000;
 
     // สร้างสี่เหลี่ยม
-    const avatar = scene.add.rectangle(info.x, info.y, 40, 40, color);
-    scene.physics.add.existing(avatar);
+    //const avatar = scene.add.rectangle(info.x, info.y, 40, 40, color);
+    //scene.physics.add.existing(avatar);
 
-    // สร้างชื่อ
+    // สร้างสี่เหลี่ยม avatar
+    const avatar = scene.physics.add.sprite(info.x, info.y, 'dude');
+
+    //สุ่ม Skin
+    const randomColor = info.color ? parseInt(info.color, 16) : Math.random() * 0xffffff;
+    avatar.setTint(randomColor);
+     
+    // สร้างชื่อบนหัว
     avatar.label = scene.add.text(info.x, info.y - 40, info.name, {
         fontSize: '16px',
         fill: '#ffffff',

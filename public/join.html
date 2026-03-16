@@ -22,24 +22,20 @@
         </p>
     </div>
 
-    <script>
-        // ฟังก์ชันสำหรับส่งตัวแปรชื่อผ่าน URL ไปยังหน้า controller.html
+    <script> 
         function joinGame() {
             const nameInput = document.getElementById('username');
             const name = nameInput.value.trim();
 
-            if (name !== "") {
-                // เข้ารหัสชื่อเพื่อป้องกันปัญหาตัวอักษรพิเศษใน URL
-                const encodedName = encodeURIComponent(name);
-                // เปลี่ยนหน้าไปยัง controller.html พร้อมพารามิเตอร์ name
+            if (name !== "") { 
+                const encodedName = encodeURIComponent(name); 
                 window.location.href = `controller.html?name=${encodedName}`;
             } else {
-                alert("กรุณาใส่ชื่อของคุณก่อนเริ่มเกมครับ");
+                alert("pls enter your name");
                 nameInput.focus();
             }
         }
-
-        // รองรับการกดปุ่ม Enter บน Keyboard มือถือ
+         
         document.getElementById('username').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 joinGame();
