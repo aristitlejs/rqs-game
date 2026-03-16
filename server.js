@@ -15,7 +15,28 @@ io.on('connection', (socket) => {
     socket.on('join_game', (data) => {
 
         // สร้างรายการสีที่เป็นเอกลักษณ์ หรือสุ่มขึ้นมา
-        const randomColors = ['0xff0000', '0x00ff00', '0x0000ff', '0xffff00', '0xff00ff', '0x00ffff'];
+        const randomColors = [
+            0xff0000, // red
+            0x00ff00, // green
+            0x0000ff, // blue
+            0xffff00, // yellow
+            0xff00ff, // magenta
+            0x00ffff, // cyan
+            0xff8800, // orange
+            0x8800ff, // purple
+            0x0088ff, // sky blue
+            0x00ff88, // mint
+            0xff0088, // pink
+            0x888888, // gray
+            0xffffff, // white
+            0x000000, // black
+            0x8b4513, // brown
+            0x2ecc71, // emerald
+            0x3498db, // light blue
+            0xe74c3c, // soft red
+            0xf1c40f, // gold
+            0x1abc9c  // turquoise
+        ];
         const selectedColor = randomColors[Math.floor(Math.random() * randomColors.length)];
          
         players[socket.id] = {
