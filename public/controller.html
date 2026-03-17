@@ -5,63 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Controller - ปุ่มควบคุม</title>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
-        .controller-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 15px;
-            width: 250px;
-            height: 250px;
-            margin: 50px auto;
-        }
 
-        .btn-ctrl {
-            background: #444;
-            border: 2px solid #666;
-            border-radius: 15px;
-            color: white;
-            font-size: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
-            touch-action: manipulation;
-        }
-
-            .btn-ctrl:active {
-                background: #00d2ff;
-                border-color: #fff;
-            }
-
-        .up {
-            grid-column: 2;
-        }
-
-        .left {
-            grid-column: 1;
-            grid-row: 2;
-        }
-
-        .right {
-            grid-column: 3;
-            grid-row: 2;
-        }
-
-        .down {
-            grid-column: 2;
-            grid-row: 3;
+        #joystick-container {
+            width: 100%;
+            height: 300px; /* พื้นที่สำหรับโยก Joystick */
+            position: relative;
+            background: #222;
         }
     </style>
 </head>
 <body style="background: #111;">
-    <div class="controller-grid">
-        <div class="btn-ctrl up" id="up">▲</div>
-        <div class="btn-ctrl left" id="left">◀</div>
-        <div class="btn-ctrl right" id="right">▶</div>
-        <div class="btn-ctrl down" id="down">▼</div>
-    </div>
+    <div id="joystick-container"></div>
 
     <div id="chat_zone">
         <div class="chat-input-wrapper">
@@ -77,33 +34,29 @@
 
         socket.emit('join_game', { name: playerName });
 
-        const movement = { x: 0, y: 0 };
-        const buttons = [
-            { id: 'up', vx: 0, vy: -1 },
-            { id: 'down', vx: 0, vy: 1 },
-            { id: 'left', vx: -1, vy: 0 },
-            { id: 'right', vx: 1, vy: 0 }
-        ];
+        // สร้าง Joystick
+        const manager = nipplejs.create({
+            zone: document.getElementById('joystick-container'),
+            mode: 'static',
+            position: { left: '50%', top: '50%' },
+            color: 'white',
+            size: 150
+        });
 
-        buttons.forEach(btn => {
-            const el = document.getElementById(btn.id);
-            // เริ่มกด
-            const startMove = () => {
-                movement.x = btn.vx;
-                movement.y = btn.vy;
-                socket.emit('player_move', movement);
-            };
-            // ปล่อยปุ่ม
-            const stopMove = () => {
-                movement.x = 0;
-                movement.y = 0;
-                socket.emit('player_move', movement);
-            };
+        // เมื่อมีการขยับ Joystick
+        manager.on('move', (evt, data) => {
+            if (data.vector) {
+                // ส่งค่า x, y (อยู่ระหว่าง -1 ถึง 1) ไปยัง server
+                socket.emit('move', {
+                    vx: data.vector.x,
+                    vy: -data.vector.y // กลับค่า y เพราะในเกมพิกัด y ลงคือบวก
+                });
+            }
+        });
 
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); startMove(); });
-            el.addEventListener('touchend', stopMove);
-            el.addEventListener('mousedown', startMove);
-            el.addEventListener('mouseup', stopMove);
+        // เมื่อปล่อยมือ (หยุดเดิน)
+        manager.on('end', () => {
+            socket.emit('move', { vx: 0, vy: 0 });
         });
 
         function sendChat() {

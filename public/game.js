@@ -19,7 +19,7 @@ let otherPlayers = {};
 function preload() {
     // โหลด sprite sheet
     this.load.spritesheet('cats', 'assets/cat.png', {
-        frameWidth: 31,
+        frameWidth: 31.5,
         frameHeight: 32
     });
 }
@@ -104,17 +104,17 @@ function create() {
 
                 const vx = players[id].vx;
                 const vy = players[id].vy;
+                const threshold = 0.2; // ป้องกันการขยับเล็กน้อยแล้วติด Anim
 
-                // เล่น Animation ตามทิศที่เดิน
-                if (vx < 0) avatar.play(avatar.animKeys.left, true);
-                else if (vx > 0) avatar.play(avatar.animKeys.right, true);
-                else if (vy < 0) avatar.play(avatar.animKeys.up, true);
-                else if (vy > 0) avatar.play(avatar.animKeys.down, true);
-                else {
-                    avatar.anims.stop();
-                    // กลับไปเฟรมหน้าตรง
-                    const base = avatar.anims.currentAnim ? avatar.anims.currentAnim.frames[0].frame.name : avatar.frame.name;
-                    avatar.setFrame(base);
+                // เช็คว่าทิศทางไหนเด่นกว่ากัน (x หรือ y)
+                if (Math.abs(vx) > Math.abs(vy)) {
+                    if (vx < -threshold) avatar.play(avatar.animKeys.left, true);
+                    else if (vx > threshold) avatar.play(avatar.animKeys.right, true);
+                    else avatar.anims.stop();
+                } else {
+                    if (vy < -threshold) avatar.play(avatar.animKeys.up, true);
+                    else if (vy > threshold) avatar.play(avatar.animKeys.down, true);
+                    else avatar.anims.stop();
                 }
             }
         });
@@ -143,6 +143,7 @@ function create() {
 function addPlayerAvatar(scene, info, isLocal) {
     if (info.name === 'Center' || otherPlayers[info.id]) return;
 
+
     // เลือก avatar จาก sprite sheet
     const catType = (info.catType !== undefined) ? info.catType : 0;
     const catColumnIndex = catType % 4; // จะได้ 0, 1, 2, 3
@@ -158,6 +159,8 @@ function addPlayerAvatar(scene, info, isLocal) {
 
     // สร้าง sprite
     const avatar = scene.physics.add.sprite(info.x, info.y, 'cats', baseFrame);
+
+    avatar.setScale(3);
 
     // สร้าง Key ที่ไม่ซ้ำกันสำหรับผู้เล่นคนนี้ (เช่น walk-down-socketID)
     const safeId = info.id.replace(/[^a-zA-Z0-9]/g, "");

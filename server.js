@@ -45,10 +45,15 @@ io.on('connection', (socket) => {
     });
 
     // รับ input จาก client
-    socket.on('player_move', (movement) => {
+    socket.on('move', (data) => {
         if (players[socket.id]) {
-            players[socket.id].vx = movement.x;
-            players[socket.id].vy = movement.y;
+            players[socket.id].vx = data.vx;
+            players[socket.id].vy = data.vy;
+
+            // อัปเดตพิกัด (คูณด้วยความเร็วที่ต้องการ)
+            const speed = 5;
+            players[socket.id].x += data.vx * speed;
+            players[socket.id].y += data.vy * speed;
         }
     });
 
@@ -74,8 +79,8 @@ io.on('connection', (socket) => {
 // Game Loop สำหรับขยับตำแหน่ง
 setInterval(() => {
     Object.values(players).forEach(p => {
-        p.x += (p.vx * 7); // ความเร็ว
-        p.y += (p.vy * 7);
+        p.x += (p.vx * 5); // ความเร็ว
+        p.y += (p.vy * 5);
     });
     io.emit('player_updates', players); // ส่งตำแหน่งใหม่ให้ทุกหน้าจอ
 }, 1000 / 60);
