@@ -14,48 +14,17 @@ io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
     socket.on('join_game', (data) => {
 
-        // สร้างรายการสีที่เป็นเอกลักษณ์ หรือสุ่มขึ้นมา
-        const randomColors = [
-            0xff0000, // red
-            0x00ff00, // green
-            0x0000ff, // blue
-            0xffff00, // yellow
-            0xff00ff, // magenta
-            0x00ffff, // cyan
-            0xff8800, // orange
-            0x8800ff, // purple
-            0x0088ff, // sky blue
-            0x00ff88, // mint
-            0xff0088, // pink
-            0x888888, // gray
-            0xffffff, // white
-            0x000000, // black
-            0x8b4513, // brown
-            0x2ecc71, // emerald
-            0x3498db, // light blue
-            0xe74c3c, // soft red
-            0xf1c40f, // gold
-            0x1abc9c  // turquoise
-        ];
-        const selectedColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-
-        if (data.name === 'Center') {
-            console.log("Main Screen Connected (Not added to player list)");
-            socket.emit('current_players', players); // ส่งแค่รายชื่อคนอื่นให้หน้าจอหลักดู
-            return; // จบการทำงาน ไม่ต้องสร้าง Object ผู้เล่นให้ Center
-        }
-
         players[socket.id] = {
             id: socket.id,
-            name: data.name || 'Player',
-            //x: Math.random() * 800 + 100,
-            //y: Math.random() * 600 + 100,
-            x: 500,
-            y: 500,
+            name: data.name || 'Cat',
+            x: Math.random() * 500 + 200,
+            y: Math.random() * 500 + 200,
             vx: 0,
             vy: 0,
-            color: selectedColor // เก็บสีไว้ในข้อมูลผู้เล่น
+            catType: Math.floor(Math.random() * 8) // สุ่มเลข 0-7
         };
+        socket.emit('current_players', players);
+        socket.broadcast.emit('new_player', players[socket.id]);
 
         // 1. ส่งข้อมูลผู้เล่นทั้งหมดที่มีอยู่ตอนนี้ให้ "คนที่เพิ่งเข้าใหม่"
         socket.emit('current_players', players);

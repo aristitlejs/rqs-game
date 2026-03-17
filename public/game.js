@@ -18,9 +18,9 @@ let player; // สำหรับหน้าจอหลัก ตัวนี้มักจะเป็น null เพราะเราไม่วาดตัวเอง
 let otherPlayers = {};
 
 function preload() {
-    this.load.spritesheet('dude', 'https://labs.phaser.io/assets/sprites/dude.png', {
+    this.load.spritesheet('cats', 'assets/cat.png', {
         frameWidth: 32,
-        frameHeight: 48
+        frameHeight: 32
     });
 }
 function create() {
@@ -28,12 +28,37 @@ function create() {
     const self = this;
 
     // 1. สร้าง Animations
+    // ทิศลง (แถวที่ 1: เฟรม 0, 1, 2)
     this.anims.create({
-        key: 'walk',
-        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+        key: 'walk-down',
+        frames: this.anims.generateFrameNumbers('cats', { start: 0, end: 2 }),
         frameRate: 10, repeat: -1
     });
-    this.anims.create({ key: 'idle', frames: [{ key: 'dude', frame: 4 }], frameRate: 20 });
+
+    // ทิศซ้าย (แถวที่ 2: เฟรม 12, 13, 14) *สมมติว่าภาพกว้าง 12 เฟรม
+    this.anims.create({
+        key: 'walk-left',
+        frames: this.anims.generateFrameNumbers('cats', { start: 12, end: 14 }),
+        frameRate: 10, repeat: -1
+    });
+
+    // ทิศขวา (แถวที่ 3: เฟรม 24, 25, 26)
+    this.anims.create({
+        key: 'walk-right',
+        frames: this.anims.generateFrameNumbers('cats', { start: 24, end: 26 }),
+        frameRate: 10, repeat: -1
+    });
+
+    // ทิศขึ้น (แถวที่ 4: เฟรม 36, 37, 38)
+    this.anims.create({
+        key: 'walk-up',
+        frames: this.anims.generateFrameNumbers('cats', { start: 36, end: 38 }),
+        frameRate: 10, repeat: -1
+    });
+
+
+
+    this.anims.create({ key: 'idle', frames: [{ key: 'cats', frame: 4 }], frameRate: 20 });
 
     // 2. ตั้งค่าฉาก
     this.cameras.main.setBackgroundColor('#2d2d2d');
@@ -66,19 +91,49 @@ function create() {
         }
     });
 
+    //socket.on('player_updates', (players) => {
+    //    Object.keys(players).forEach((id) => {
+    //        let avatar = (id === socket.id) ? player : otherPlayers[id];
+    //        if (avatar) {
+    //            avatar.setPosition(players[id].x, players[id].y);
+
+    //            // อัปเดต Animation ตามทิศทาง (vx, vy)
+    //            if (players[id].vx > 0) avatar.play('walk-right', true);
+    //            else if (players[id].vx < 0) avatar.play('walk-left', true);
+    //            else if (players[id].vy > 0) avatar.play('walk-down', true);
+    //            else if (players[id].vy < 0) avatar.play('walk-up', true);
+    //            else avatar.stop();
+    //        }
+    //    });
+    //});
+
+    // ใน socket.on('player_updates')
+
     socket.on('player_updates', (players) => {
         Object.keys(players).forEach((id) => {
             let avatar = (id === socket.id) ? player : otherPlayers[id];
-            if (avatar) {
+            if (avatar && avatar.animKeys) {
                 avatar.setPosition(players[id].x, players[id].y);
 
-                // อัปเดตทิศทางและท่าทาง
-                if (players[id].vx !== 0 || players[id].vy !== 0) {
-                    avatar.play('walk', true);
-                    avatar.flipX = (players[id].vx < 0);
+                const vx = players[id].vx;
+                const vy = players[id].vy;
+
+                // ตรวจสอบทิศทางลำดับความสำคัญ (Priority)
+                if (vx < 0) {
+                    avatar.play('walk-left', true);
+                } else if (vx > 0) {
+                    avatar.play('walk-right', true);
+                } else if (vy < 0) {
+                    avatar.play('walk-up', true);
+                } else if (vy > 0) {
+                    avatar.play('walk-down', true);
                 } else {
-                    avatar.play('idle');
+                    // ถ้าไม่ขยับ ให้หยุดที่เฟรมแรกของทิศนั้นๆ หรือหยุดเล่น Animation
+                    avatar.anims.stop();
                 }
+
+                // อย่าลืมอัปเดตตำแหน่ง Label และ Chat
+                if (avatar.label) avatar.label.setPosition(avatar.x, avatar.y - 40);
             }
         });
     });
@@ -99,12 +154,56 @@ function create() {
 }
 
 function addPlayerAvatar(scene, info, isLocal) {
-    const avatar = scene.physics.add.sprite(info.x, info.y, 'dude');
+    const col = (info.catType % 4) * 3; // คอลัมน์เริ่ม (0, 3, 6, 9)
+    const row = Math.floor(info.catType / 4) * 4; // แถวเริ่ม (0 หรือ 4)
+    const baseFrame = (row * 12) + col;
 
-    // ตรวจสอบสี ถ้าไม่มีให้ใช้สีขาว
-    const colorHex = info.color ? info.color.replace('0x', '') : 'ffffff';
-    avatar.setTint(parseInt(colorHex, 16));
+    const avatar = scene.physics.add.sprite(info.x, info.y, 'cats', baseFrame);
 
+    const id = info.id.replace(/[^a-zA-Z0-9]/g, ""); // ลบอักขระพิเศษออก
+
+    const animKeys = {
+        down: `walk-down-${id}`,
+        left: `walk-left-${id}`,
+        right: `walk-right-${id}`,
+        up: `walk-up-${id}`
+    };
+
+    scene.anims.create({
+        key: animKeys.down,
+        frames: scene.anims.generateFrameNumbers('cats', {
+            frames: [baseFrame, baseFrame + 1, baseFrame + 2]
+        }),
+        frameRate: 10, repeat: -1
+    });
+
+    scene.anims.create({
+        key: animKeys.left,
+        frames: scene.anims.generateFrameNumbers('cats', {
+            frames: [baseFrame + 12, baseFrame + 13, baseFrame + 14]
+        }),
+        frameRate: 10, repeat: -1
+    });
+
+    scene.anims.create({
+        key: animKeys.right,
+        frames: scene.anims.generateFrameNumbers('cats', {
+            frames: [baseFrame + 24, baseFrame + 25, baseFrame + 26]
+        }),
+        frameRate: 10, repeat: -1
+    });
+
+    scene.anims.create({
+        key: animKeys.up,
+        frames: scene.anims.generateFrameNumbers('cats', {
+            frames: [baseFrame + 36, baseFrame + 37, baseFrame + 38]
+        }),
+        frameRate: 10, repeat: -1
+    });
+
+    avatar.animKeys = animKeys;
+
+    // ชื่อ
     avatar.label = scene.add.text(info.x, info.y - 40, info.name, {
         fontSize: '14px', fill: '#ffffff', backgroundColor: '#000000aa'
     }).setOrigin(0.5);
