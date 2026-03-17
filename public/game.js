@@ -52,8 +52,8 @@ function create() {
 
     socket.on('current_players', (players) => {
         Object.keys(players).forEach((id) => {
-            if (id === socket.id) {
-                console.log("Skipping Host Avatar");
+            if (id === socket.id || players[id].name === 'Center') {
+                console.log("Found Host/Center, skipping...");
             } else {
                 addPlayerAvatar(self, players[id], false);
             }
@@ -61,7 +61,7 @@ function create() {
     });
 
     socket.on('new_player', (playerInfo) => {
-        if (playerInfo.id !== socket.id) {
+        if (playerInfo.id !== socket.id && playerInfo.name !== 'Center') {
             addPlayerAvatar(self, playerInfo, false);
         }
     });

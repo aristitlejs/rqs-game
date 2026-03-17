@@ -38,7 +38,13 @@ io.on('connection', (socket) => {
             0x1abc9c  // turquoise
         ];
         const selectedColor = randomColors[Math.floor(Math.random() * randomColors.length)];
-         
+
+        if (data.name === 'Center') {
+            console.log("Main Screen Connected (Not added to player list)");
+            socket.emit('current_players', players); // ส่งแค่รายชื่อคนอื่นให้หน้าจอหลักดู
+            return; // จบการทำงาน ไม่ต้องสร้าง Object ผู้เล่นให้ Center
+        }
+
         players[socket.id] = {
             id: socket.id,
             name: data.name || 'Player',
@@ -71,8 +77,9 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         if (players[socket.id]) {
-            delete players[socket.id];
-            io.emit('player_disconnected', socket.id);
+            console.log('Player left:', players[socket.id].name);
+            delete players[socket.id]; // ลบข้อมูลออกจาก Object หลัก
+            io.emit('player_disconnected', socket.id); // บอก Client ให้ลบ Sprite ทิ้ง
             io.emit('update_count', Object.keys(players).length);
         }
     });
