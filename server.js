@@ -5,7 +5,12 @@
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+//const io = require('socket.io')(http);
+const io = require('socket.io')(server, {
+    pingInterval: 1000,
+    pingTimeout: 5000,
+    cookie: false
+});
 const path = require('path');
 
 //Serve ไฟล์หน้าเว็บ

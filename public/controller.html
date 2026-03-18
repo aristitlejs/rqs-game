@@ -43,14 +43,18 @@
             size: 150
         });
 
+        let lastEmitTime = 0;
+        const emitInterval = 33; // ส่งข้อมูลทุกๆ 33ms (ประมาณ 30 FPS)
+
         // เมื่อมีการขยับ Joystick
         manager.on('move', (evt, data) => {
-            if (data.vector) {
-                // ส่งค่า x, y (อยู่ระหว่าง -1 ถึง 1) ไปยัง server
+            const now = Date.now();
+            if (now - lastEmitTime > emitInterval) {
                 socket.emit('move', {
                     vx: data.vector.x,
-                    vy: -data.vector.y // กลับค่า y เพราะในเกมพิกัด y ลงคือบวก
+                    vy: -data.vector.y
                 });
+                lastEmitTime = now;
             }
         });
 

@@ -4,9 +4,18 @@ const config = {
     parent: 'game-container',
     width: window.innerWidth, // เต็มหน้าจอ
     height: window.innerHeight, // เต็มหน้าจอ
+    render: { pixelArt: true },
     physics: {
         default: 'arcade', // ใช้ physics แบบง่าย
         arcade: { gravity: { y: 0 } }
+    },
+    fps: {
+        target: 60,
+        forceSetTimeOut: true // ช่วยให้ FPS นิ่งขึ้นในบาง Browser
+    },
+    render: {
+        pixelArt: true,
+        antialias: false
     },
     scene: { preload: preload, create: create, update: update }
 };
@@ -99,26 +108,19 @@ function create() {
     socket.on('player_updates', (players) => {
         Object.keys(players).forEach((id) => {
             let avatar = (id === socket.id) ? player : otherPlayers[id];
-            if (avatar && avatar.animKeys) {
-                avatar.setPosition(players[id].x, players[id].y);
+            if (avatar) {
+                // แทนที่จะ setPosition ทันที ให้เก็บเป้าหมายไว้
+                avatar.targetX = players[id].x;
+                avatar.targetY = players[id].y;
 
-                const vx = players[id].vx;
-                const vy = players[id].vy;
-                const threshold = 0.2; // ป้องกันการขยับเล็กน้อยแล้วติด Anim
-
-                // เช็คว่าทิศทางไหนเด่นกว่ากัน (x หรือ y)
-                if (Math.abs(vx) > Math.abs(vy)) {
-                    if (vx < -threshold) avatar.play(avatar.animKeys.left, true);
-                    else if (vx > threshold) avatar.play(avatar.animKeys.right, true);
-                    else avatar.anims.stop();
-                } else {
-                    if (vy < -threshold) avatar.play(avatar.animKeys.up, true);
-                    else if (vy > threshold) avatar.play(avatar.animKeys.down, true);
-                    else avatar.anims.stop();
-                }
+                // อัปเดตความเร็วเพื่อใช้เลือก Animation
+                avatar.vx = players[id].vx;
+                avatar.vy = players[id].vy;
             }
         });
     });
+
+
 
     socket.on('player_disconnected', (id) => {
         if (otherPlayers[id]) {
@@ -211,13 +213,20 @@ function showChatBubble(scene, avatar, message) {
 
 // update ทุก frame
 function update() {
-    // ให้ Label และ Chat วิ่งตามตัวละครทุกเฟรม
-    Object.values(otherPlayers).forEach(p => {
-        if (p.label) p.label.setPosition(p.x, p.y - 40);
-        if (p.chatText) p.chatText.setPosition(p.x, p.y - 70);
+    const lerpFactor = 0.15; // ค่าความนุ่มนวล (0.1 - 0.2 กำลังดี)
+
+    Object.values(otherPlayers).forEach(avatar => {
+        if (avatar.targetX !== undefined) {
+            // ค่อยๆ ขยับตัวละครไปยังตำแหน่งเป้าหมาย
+            avatar.x = Phaser.Math.Linear(avatar.x, avatar.targetX, lerpFactor);
+            avatar.y = Phaser.Math.Linear(avatar.y, avatar.targetY, lerpFactor);
+
+            // ให้ชื่อและแชทวิ่งตาม
+            avatar.label.setPosition(avatar.x, avatar.y - 60);
+            if (avatar.chatText) avatar.chatText.setPosition(avatar.x, avatar.y - 90);
+
+            // จัดการ Animation ตามความเร็วที่ได้รับมา
+            updateAvatarAnimation(avatar);
+        }
     });
-    if (player) {
-        if (player.label) player.label.setPosition(player.x, player.y - 40);
-        if (player.chatText) player.chatText.setPosition(player.x, player.y - 70);
-    }
 }
