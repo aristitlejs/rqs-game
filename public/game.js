@@ -109,18 +109,16 @@ function create() {
         Object.keys(players).forEach((id) => {
             let avatar = (id === socket.id) ? player : otherPlayers[id];
             if (avatar) {
-                // แทนที่จะ setPosition ทันที ให้เก็บเป้าหมายไว้
+                // เก็บพิกัดเป้าหมายสำหรับการ Lerp
                 avatar.targetX = players[id].x;
                 avatar.targetY = players[id].y;
 
-                // อัปเดตความเร็วเพื่อใช้เลือก Animation
+                // เก็บความเร็วเพื่อใช้ตัดสินใจเลือก Animation ใน update()
                 avatar.vx = players[id].vx;
                 avatar.vy = players[id].vy;
             }
         });
     });
-
-
 
     socket.on('player_disconnected', (id) => {
         if (otherPlayers[id]) {
@@ -162,7 +160,7 @@ function addPlayerAvatar(scene, info, isLocal) {
     // สร้าง sprite
     const avatar = scene.physics.add.sprite(info.x, info.y, 'cats', baseFrame);
 
-    avatar.setScale(3);
+    avatar.setScale(2);
 
     // สร้าง Key ที่ไม่ซ้ำกันสำหรับผู้เล่นคนนี้ (เช่น walk-down-socketID)
     const safeId = info.id.replace(/[^a-zA-Z0-9]/g, "");
@@ -229,4 +227,43 @@ function update() {
             updateAvatarAnimation(avatar);
         }
     });
+}
+
+function updateAvatarAnimation(avatar) {
+    if (!avatar.animKeys) return;
+
+    const vx = avatar.vx || 0;
+    const vy = avatar.vy || 0;
+    const threshold = 0.1; // ค่าความไวของ Joystick ที่จะเริ่มเล่น Anim
+
+    // เช็คว่าแรงโยก Joystick ไปทิศทางไหนมากกว่ากัน
+    if (Math.abs(vx) > Math.abs(vy)) {
+        // เน้นเคลื่อนที่แนวนอน
+        if (vx < -threshold) {
+            avatar.play(avatar.animKeys.left, true);
+        } else if (vx > threshold) {
+            avatar.play(avatar.animKeys.right, true);
+        } else {
+            stopAnimation(avatar);
+        }
+    } else {
+        // เน้นเคลื่อนที่แนวตั้ง
+        if (vy < -threshold) {
+            avatar.play(avatar.animKeys.up, true);
+        } else if (vy > threshold) {
+            avatar.play(avatar.animKeys.down, true);
+        } else {
+            stopAnimation(avatar);
+        }
+    }
+}
+
+function stopAnimation(avatar) {
+    if (avatar.anims.isPlaying) {
+        avatar.anims.stop();
+        // กลับไปเฟรมหน้าตรงของแมวลายนั้นๆ (เฟรมที่ 0 ของ Animation ปัจจุบัน)
+        if (avatar.anims.currentAnim) {
+            avatar.setFrame(avatar.anims.currentAnim.frames[0].frame.name);
+        }
+    }
 }

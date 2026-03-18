@@ -6,11 +6,12 @@ const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
 //const io = require('socket.io')(http);
-const io = require('socket.io')(server, {
+const io = require('socket.io')(http, {
     pingInterval: 1000,
     pingTimeout: 5000,
     cookie: false
 });
+
 const path = require('path');
 
 //Serve ไฟล์หน้าเว็บ
@@ -56,7 +57,7 @@ io.on('connection', (socket) => {
             players[socket.id].vy = data.vy;
 
             // อัปเดตพิกัด (คูณด้วยความเร็วที่ต้องการ)
-            const speed = 5;
+            const speed = 3;
             players[socket.id].x += data.vx * speed;
             players[socket.id].y += data.vy * speed;
         }
